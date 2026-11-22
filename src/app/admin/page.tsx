@@ -5,7 +5,7 @@ import { isAdmin } from "@/lib/auth";
 import { fullName, listGuests, STATUS_LABEL, type Guest, type Status } from "@/lib/guests";
 import { guestLink } from "@/lib/notify";
 import { ActionForm } from "./action-form";
-import { inviteGuests, logout, removeGuest, resendInvite, saveGuest, sendBroadcast } from "./actions";
+import { addGuest, addGuestList, logout, removeGuest, resendInvite, saveGuest, sendBroadcast, sendInvitations } from "./actions";
 
 // Depends on cookies and env vars, so never prerender at build time.
 export const dynamic = "force-dynamic";
@@ -26,6 +26,7 @@ export default async function AdminPage() {
   if (!(await isAdmin())) redirect("/admin/login");
   const guests = await listGuests();
 
+  const notInvited = guests.filter((g) => !g.invitedAt).length;
   const count = (s: Status) => guests.filter((g) => g.status === s).length;
   const heads = (s: Status) =>
     guests.filter((g) => g.status === s).reduce((n, g) => n + 1 + g.additionalGuests.length, 0);
@@ -65,31 +66,79 @@ export default async function AdminPage() {
       </dl>
 
       <section className="mt-10">
-        <h2 className="display text-2xl text-sun">Invite guests</h2>
+        <h2 className="display text-2xl text-sun">Add guests</h2>
         <div className="card mt-3">
-          <ActionForm action={inviteGuests}>
-            <label className="label" htmlFor="list">
-              One guest per line: First, Last, email
+          <p className="mb-4 text-sm text-mute">
+            Adding someone only puts them on the list. Nothing is emailed until you send invitations below.
+          </p>
+          <ActionForm action={addGuest}>
+            <div className="grid grid-cols-2 gap-3">
+              <label>
+                <span className="label">First name</span>
+                <input name="firstName" required autoComplete="off" className="field" />
+              </label>
+              <label>
+                <span className="label">Last name</span>
+                <input name="lastName" autoComplete="off" className="field" />
+              </label>
+            </div>
+            <label className="mt-3 block">
+              <span className="label">Email</span>
+              <input name="email" type="email" required autoComplete="off" inputMode="email" className="field" />
             </label>
-            <textarea
-              id="list"
-              name="list"
-              rows={5}
-              required
-              className="field font-mono !text-sm"
-              placeholder={"Amina, Benali, amina@example.com\nSam, Okafor, sam@example.com"}
-            />
-            <label className="mt-3 flex items-center gap-2 text-sm text-cream">
-              <input type="checkbox" name="send" defaultChecked className="size-5 accent-[var(--color-sun)]" />
-              Email the invitation now
-            </label>
-            <p className="mt-1 text-xs text-mute">
-              Untick to add people quietly (to record an RSVP yourself, or invite later with
-              &quot;Resend invite&quot;). <a className="underline" href="/admin/emails/invitation" target="_blank">Preview the invitation</a>
-            </p>
             <button type="submit" className="btn mt-4 w-full sm:w-auto">
-              Add to guest list
+              Add guest
             </button>
+          </ActionForm>
+
+          <details className="mt-5 border-t-2 border-haze pt-4">
+            <summary className="cursor-pointer text-sm text-mute underline">Or paste a list</summary>
+            <ActionForm action={addGuestList} className="mt-3">
+              <label className="label" htmlFor="list">
+                One guest per line: First, Last, email
+              </label>
+              <textarea
+                id="list"
+                name="list"
+                rows={5}
+                required
+                className="field font-mono !text-sm"
+                placeholder={"Amina, Benali, amina@example.com\nSam, Okafor, sam@example.com"}
+              />
+              <button type="submit" className="btn btn-quiet mt-3">
+                Add list
+              </button>
+            </ActionForm>
+          </details>
+        </div>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="display text-2xl text-sun">Send invitations</h2>
+        <div className="card mt-3 !border-sun">
+          <p className="display text-3xl text-cream">
+            {notInvited} <span className="text-base text-mute">of {guests.length} not invited yet</span>
+          </p>
+          <p className="mt-2 text-sm text-mute">
+            Emails the invitation, with a personal RSVP link, to everyone who hasn&apos;t been sent one.
+            People already invited are skipped, so it is safe to use again after adding more guests.{" "}
+            <a className="underline" href="/admin/emails/invitation" target="_blank">
+              Preview the invitation
+            </a>
+          </p>
+          <ActionForm action={sendInvitations} className="mt-4">
+            <label className="flex items-center gap-2 text-sm text-cream">
+              <input type="checkbox" name="confirm" className="size-5 accent-[var(--color-sun)]" />
+              Yes, email {notInvited} {notInvited === 1 ? "guest" : "guests"} now
+            </label>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button type="submit" name="intent" value="send" className="btn">
+                Send invitations
+              </button>
+              <button type="submit" name="intent" value="test" className="btn btn-quiet">
+                Send a test to me
+              </button>
+            </div>
           </ActionForm>
         </div>
       </section>

@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { site, siteUrl } from "@/content/site";
-import { reminderEmail, updateEmail } from "@/emails/templates";
+import { invitationEmail, reminderEmail, updateEmail } from "@/emails/templates";
 import { checkAdminPassword, endAdminSession, isAdmin, startAdminSession } from "@/lib/auth";
-import { describeSend, sendEmails, type Outgoing } from "@/lib/email";
+import { describeSend, sendEmails, type Outgoing, type SendResult } from "@/lib/email";
 import {
   cleanNames,
   createGuest,
@@ -63,50 +63,83 @@ function parseInviteLine(line: string) {
   return { firstName, lastName, email };
 }
 
-// Adds each listed person to the guest list and (optionally) emails their invitation.
-export async function inviteGuests(_prev: ActionState, form: FormData): Promise<ActionState> {
+// Adds one person to the guest list. No email is sent.
+export async function addGuest(_prev: ActionState, form: FormData): Promise<ActionState> {
   if (!(await isAdmin())) return DENIED;
-  const sendNow = form.get("send") === "on";
+  const firstName = str(form.get("firstName"));
+  const lastName = str(form.get("lastName"));
+  const email = normalizeEmail(str(form.get("email")));
+  if (!firstName) return { ok: false, message: "First name is required." };
+  if (!isValidEmail(email)) return { ok: false, message: "That email doesn't look right." };
+  if (await getGuestByEmail(email)) return { ok: false, message: `${email} is already on the list.` };
+  await createGuest({ firstName, lastName, email });
+  revalidatePath("/admin");
+  return { ok: true, message: `Added ${`${firstName} ${lastName}`.trim()}. No email sent yet.` };
+}
+
+// Adds each pasted person to the guest list. No email is sent.
+export async function addGuestList(_prev: ActionState, form: FormData): Promise<ActionState> {
+  if (!(await isAdmin())) return DENIED;
   const lines = str(form.get("list")).split("\n").map((l) => l.trim()).filter(Boolean);
   if (lines.length === 0) return { ok: false, message: "Paste at least one guest." };
 
   const bad: string[] = [];
   let added = 0;
   let existing = 0;
-  const toInvite: Guest[] = [];
-
   for (const line of lines) {
     const parsed = parseInviteLine(line);
-    if (!parsed) {
-      bad.push(line);
-      continue;
-    }
-    let guest = await getGuestByEmail(parsed.email);
-    if (guest) existing++;
+    if (!parsed) bad.push(line);
+    else if (await getGuestByEmail(parsed.email)) existing++;
     else {
-      guest = await createGuest(parsed);
+      await createGuest(parsed);
       added++;
     }
-    // Never re-send an invitation from here; use "Resend invite" on the guest.
-    if (!guest.invitedAt && !toInvite.some((g) => g.id === guest.id)) toInvite.push(guest);
-  }
-
-  let emailNote = "";
-  if (sendNow && toInvite.length > 0) {
-    const result = await sendEmails(toInvite.map(invitationFor));
-    if (result.failed === 0) {
-      const now = new Date();
-      await Promise.all(toInvite.map((g) => updateGuest(g.id, { invitedAt: now })));
-    }
-    emailNote = ` Invitations: ${describeSend(result)}`;
   }
 
   revalidatePath("/admin");
-  const summary = `${added} added, ${existing} already on the list.${emailNote}`;
+  const summary = `${added} added, ${existing} already on the list. No emails sent yet.`;
   if (bad.length > 0) {
     return { ok: false, message: `${summary} Couldn't read ${bad.length} line(s): ${bad.join(" | ")}` };
   }
   return { ok: true, message: summary };
+}
+
+// Emails the invitation to everyone on the list who has not been sent one yet.
+export async function sendInvitations(_prev: ActionState, form: FormData): Promise<ActionState> {
+  if (!(await isAdmin())) return DENIED;
+
+  if (form.get("intent") === "test") {
+    const to = process.env.ADMIN_EMAIL;
+    if (!to) return { ok: false, message: "Set ADMIN_EMAIL to send yourself a test." };
+    const result = await sendEmails([
+      { to, ...invitationEmail({ firstName: site.host, rsvpUrl: `${siteUrl()}/rsvp` }) },
+    ]);
+    return { ok: result.failed === 0, message: `Test to ${to}: ${describeSend(result)}` };
+  }
+
+  if (form.get("confirm") !== "on") return { ok: false, message: "Tick the box to confirm." };
+  const waiting = (await listGuests()).filter((g) => !g.invitedAt);
+  if (waiting.length === 0) return { ok: false, message: "Everyone on the list has already been invited." };
+
+  // Send in batches and mark each batch as invited straight away, so a failure
+  // part-way through never leads to someone being emailed twice on a retry.
+  const total: SendResult = { sent: 0, failed: 0, logged: false };
+  for (let i = 0; i < waiting.length; i += 100) {
+    const batch = waiting.slice(i, i + 100);
+    const result = await sendEmails(batch.map(invitationFor));
+    total.logged = result.logged;
+    if (result.failed > 0) {
+      total.failed += waiting.length - i;
+      total.error = result.error;
+      break;
+    }
+    total.sent += result.sent;
+    const now = new Date();
+    await Promise.all(batch.map((g) => updateGuest(g.id, { invitedAt: now })));
+  }
+
+  revalidatePath("/admin");
+  return { ok: total.failed === 0, message: describeSend(total) };
 }
 
 // Edit a guest and their RSVP on their behalf.

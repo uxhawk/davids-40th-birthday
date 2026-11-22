@@ -51,8 +51,8 @@ See [`.env.example`](.env.example) for every variable.
 
 ## How RSVPs work
 
-- You add guests on `/admin` (one per line: `First, Last, email`). Each gets an invitation
-  email containing a personal link.
+- You add guests on `/admin`, one at a time or by pasting a list. Nothing is emailed at that point.
+- "Send invitations" emails everyone who hasn't been invited yet, each with a personal link.
 - A guest who opens their link, or types their invited email into the form, can reply
   yes / maybe / no and name any additional guests. Their browser remembers them, and every
   confirmation email carries the same personal link, so they can change their answer later
