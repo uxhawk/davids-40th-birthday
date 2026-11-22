@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-night: #150f2e;
+  --color-dusk: #221850;
+  --color-haze: #3b2f7a;
+  --color-cream: #fff3dc;
+  --color-mute: #b9aee0;
+  --color-sun: #ff5e3a;
+  --color-rose: #ff2e88;
+  --color-gold: #ffc247;
+  --color-teal: #2de2c8;
+  --font-display: var(--ff-display);
+  --font-sans: var(--ff-body);
+  --font-mono: var(--ff-mono);
+}
+
+html {
+  background: var(--color-night);
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(1px 1px at 12% 18%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 71% 9%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 38% 31%, #ffe9b0 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 27%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 55% 14%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 24% 6%, #9ff5e8 50%, transparent 51%),
+    var(--color-night);
+  background-size: 420px 420px;
+  color: var(--color-cream);
+  font-family: var(--ff-body), system-ui, sans-serif;
+}
+
+@layer components {
+  /* Small spaced-out monospace caption used above headings and fields. */
+  .eyebrow {
+    font-family: var(--ff-mono), monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-teal);
+  }
+
+  .display {
+    font-family: var(--ff-display), sans-serif;
+    line-height: 1;
+    letter-spacing: 0.01em;
+  }
+
+  /* Panel with a hard offset shadow, like a printed poster card. */
+  .card {
+    background: var(--color-dusk);
+    border: 2px solid var(--color-haze);
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    box-shadow: 6px 6px 0 0 rgb(0 0 0 / 0.35);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 999px;
+    border: 2px solid var(--color-night);
+    background: var(--color-sun);
+    color: var(--color-night);
+    font-family: var(--ff-display), sans-serif;
+    font-size: 1.05rem;
+    letter-spacing: 0.04em;
+    box-shadow: 4px 4px 0 0 var(--color-gold);
+    transition: transform 0.12s, box-shadow 0.12s;
+    cursor: pointer;
+  }
+  .btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 6px 6px 0 0 var(--color-gold);
+  }
+  .btn:active {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0 0 var(--color-gold);
+  }
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+  .btn-quiet {
+    background: transparent;
+    color: var(--color-cream);
+    border-color: var(--color-haze);
+    box-shadow: none;
+    font-size: 0.9rem;
+    min-height: 2.5rem;
+    padding: 0.4rem 1rem;
+  }
+  .btn-quiet:hover,
+  .btn-quiet:active {
+    box-shadow: none;
+    border-color: var(--color-teal);
+  }
+
+  .field {
+    display: block;
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 0.75rem;
+    border: 2px solid var(--color-haze);
+    background: var(--color-night);
+    color: var(--color-cream);
+    /* 16px stops iOS zooming the page when a field is focused. */
+    font-size: 1rem;
+  }
+  .field::placeholder {
+    color: #7d72ad;
+  }
+  .field:read-only {
+    color: var(--color-mute);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-teal);
+    outline-offset: 2px;
+  }
+
+  .label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-family: var(--ff-mono), monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-mute);
+  }
+
+  /* Striped setting sun. */
+  .retro-sun {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: linear-gradient(180deg, var(--color-gold) 0%, var(--color-sun) 48%, var(--color-rose) 100%);
+    mask-image: linear-gradient(
+      180deg,
+      #000 0 52%,
+      transparent 52% 54.5%,
+      #000 54.5% 62%,
+      transparent 62% 65.5%,
+      #000 65.5% 72%,
+      transparent 72% 76.5%,
+      #000 76.5% 82%,
+      transparent 82% 87.5%,
+      #000 87.5% 91%,
+      transparent 91% 97%,
+      #000 97%
+    );
+    filter: drop-shadow(0 0 40px rgb(255 94 58 / 0.45));
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 0.15rem 0.65rem;
+    border-radius: 999px;
+    font-family: var(--ff-mono), monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1.5px solid currentColor;
+  }
+}
