@@ -27,7 +27,7 @@ export const site = {
     },
   ],
 
-  // Opening note from the host, shown first on the home page.
+  // Opening note from the host, shown as the first card on the home page.
   intro: {
     title: "Party Wave",
     paragraphs: [

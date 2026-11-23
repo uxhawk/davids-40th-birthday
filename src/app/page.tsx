@@ -41,24 +41,20 @@ export default function Home() {
 
       <div className="bg-dusk px-5 pb-16">
         <div className="mx-auto max-w-2xl space-y-12 pt-6">
-          <section aria-labelledby="intro">
-            <p className="eyebrow">From {site.host}</p>
-            <h2 id="intro" className="display mt-2 text-3xl text-gold">
-              {site.intro.title}
-            </h2>
-            <div className="mt-4 space-y-4 text-base leading-relaxed text-cream/95">
-              {site.intro.paragraphs.map((text) => (
-                <p key={text}>{text}</p>
-              ))}
-            </div>
-          </section>
-
           <section aria-labelledby="brief">
             <p className="eyebrow">Mission brief</p>
             <h2 id="brief" className="display mt-2 text-3xl text-gold">
               The details
             </h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              <article className="card !bg-night sm:col-span-3">
+                <h3 className="display text-xl text-sun">{site.intro.title}</h3>
+                <div className="mt-2 space-y-3 text-sm leading-relaxed text-cream/90">
+                  {site.intro.paragraphs.map((text) => (
+                    <p key={text}>{text}</p>
+                  ))}
+                </div>
+              </article>
               {site.sections.map((s) => (
                 <article key={s.title} className="card !bg-night">
                   <h3 className="display text-xl text-sun">{s.title}</h3>
