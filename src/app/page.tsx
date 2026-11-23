@@ -47,6 +47,14 @@ export default function Home() {
               The details
             </h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              <article className="card !bg-night sm:col-span-3">
+                <h3 className="display text-xl text-sun">{site.intro.title}</h3>
+                <div className="mt-2 space-y-3 text-sm leading-relaxed text-cream/90">
+                  {site.intro.paragraphs.map((text) => (
+                    <p key={text}>{text}</p>
+                  ))}
+                </div>
+              </article>
               {site.sections.map((s) => (
                 <article key={s.title} className="card !bg-night">
                   <h3 className="display text-xl text-sun">{s.title}</h3>
