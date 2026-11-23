@@ -27,6 +27,17 @@ export const site = {
     },
   ],
 
+  // Opening note from the host, shown first on the home page.
+  intro: {
+    title: "Party Wave",
+    paragraphs: [
+      "I'm turning 40 in November and would love for you to celebrate with me!",
+      "Why Morocco? I endlessly mind-surf and daydream about finding waves in new countries. I've never been, but Morocco's food, nature, and culture have always appealed to me.",
+      "In a place blessed with right-hand point breaks, art, shopping, history, delicious food, and relaxing landscapes, it has something for everyone.",
+      "Not a surfer? No problem! I'll hire surf instructors so in addition to tagine and shisha, we can share some waves!",
+    ],
+  },
+
   // Placeholder sections for the home page.
   sections: [
     {
